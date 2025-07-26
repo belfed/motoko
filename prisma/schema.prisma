@@ -9,15 +9,21 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
+  id            String  @id @default(uuid())
   name          String
   email         String
   emailVerified Boolean
   image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  sessions      Session[]
-  accounts      Account[]
+
+  sessions Session[]
+  accounts Account[]
+  wallet   Wallet[]
+  category Category[]
+  entry    Entry[]
+  budget   Budget[]
+
+  createdAt DateTime
+  updatedAt DateTime
 
   @@unique([email])
   @@map("user")
@@ -66,4 +72,94 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+enum WalletType {
+  BANK
+  CARD
+  CASH
+  OTHER
+}
+
+model Wallet {
+  id      String     @id @default(uuid())
+  name    String
+  type    WalletType
+  balance Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  entry Entry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name])
+  @@map("wallet")
+}
+
+enum CategoryType {
+  NEEDS
+  WANTS
+  CULTURE
+  UNEXPECTED
+}
+
+model Category {
+  id   String       @id @default(uuid())
+  name String
+  icon String?
+  type CategoryType
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  entry  Entry[]
+  budget Budget[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name])
+  @@map("category")
+}
+
+model Entry {
+  id     String   @id @default(uuid())
+  amount Int
+  date   DateTime @default(now())
+  note   String?
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  wallet   Wallet @relation(fields: [walletId], references: [id])
+  walletId String
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("entry")
+}
+
+model Budget {
+  id    String @id @default(uuid())
+  month Int
+  year  Int
+  limit Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("budget")
 }
